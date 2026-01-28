@@ -1,0 +1,13 @@
+/* Busca y borra o comenta esto si está en tu style.css */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* ... esto suele forzar un color de fondo que choca con PrimeVue ... */
+}
+
+body {
+  margin: 0;
+  display: flex; /* Esto rompe el layout de los Cards */
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
