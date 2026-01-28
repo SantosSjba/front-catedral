@@ -1,6 +1,5 @@
 <template>
   <div class="request-view">
-    <LogoComponent />
     
     <!-- Paso 0: Inicio -->
     <StepInicio 
@@ -54,8 +53,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import LogoComponent from "../components/LogoComponent.vue";
+import { reactive, onMounted, onUnmounted, watch, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import StepInicio from "../components/steps/StepInicio.vue";
 import StepDatosSolicitante from "../components/steps/StepDatosSolicitante.vue";
 import StepDatosCelebracion from "../components/steps/StepDatosCelebracion.vue";
@@ -63,7 +62,44 @@ import StepMenciones from "../components/steps/StepMenciones.vue";
 import StepPago from "../components/steps/StepPago.vue";
 import StepResumen from "../components/steps/StepResumen.vue";
 
-const currentStep = ref(0);
+const router = useRouter();
+const route = useRoute();
+
+// Mapeo de rutas a pasos
+const routeToStepMap: Record<string, number> = {
+  '/': 0,
+  '/datos-solicitante': 1,
+  '/datos-celebracion': 2,
+  '/menciones': 3,
+  '/pago': 4,
+  '/resumen': 5,
+};
+
+// Mapeo de pasos a rutas
+const stepToRouteMap: Record<number, string> = {
+  0: '/',
+  1: '/datos-solicitante',
+  2: '/datos-celebracion',
+  3: '/menciones',
+  4: '/pago',
+  5: '/resumen',
+};
+
+// Obtener el paso actual desde la ruta
+const currentStep = computed(() => {
+  return routeToStepMap[route.path] ?? 0;
+});
+
+// Observar cambios en la ruta y eliminar hash si aparece
+watch(() => route.fullPath, (newPath) => {
+  if (window.location.hash && window.location.hash !== '#') {
+    // Si hay un hash que no sea solo '#', reemplazar la URL sin hash
+    const cleanPath = newPath.split('#')[0] || '/';
+    if (cleanPath !== route.path) {
+      router.replace(cleanPath).catch(() => {});
+    }
+  }
+}, { immediate: true });
 
 const formData = reactive({
   // Datos del solicitante
@@ -90,8 +126,44 @@ const formData = reactive({
 });
 
 const goToStep = (step: number) => {
-  currentStep.value = step;
+  const targetRoute = stepToRouteMap[step];
+  if (targetRoute) {
+    router.push(targetRoute).catch(() => {
+      // Ignorar errores de navegación si ya estamos en la misma ruta
+    });
+  }
 };
+
+// Limpiar hash de la URL al montar el componente y manejar navegación del navegador
+const handlePopState = () => {
+  // Usar setTimeout para asegurar que se ejecute después de que el router procese el cambio
+  setTimeout(() => {
+    // Si hay hash en la URL, reemplazarlo sin hash
+    if (window.location.hash && window.location.hash !== '#') {
+      const cleanPath = window.location.pathname;
+      router.replace(cleanPath).catch(() => {});
+    }
+    // Si estamos en el paso 0, asegurar que la URL esté limpia
+    const step = routeToStepMap[window.location.pathname] ?? 0;
+    if (step === 0 && window.location.pathname !== '/') {
+      router.replace('/').catch(() => {});
+    }
+  }, 0);
+};
+
+onMounted(() => {
+  // Eliminar hash si existe
+  if (window.location.hash) {
+    router.replace(window.location.pathname).catch(() => {});
+  }
+  
+  // Escuchar cambios en el historial del navegador
+  window.addEventListener('popstate', handlePopState);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('popstate', handlePopState);
+});
 
 const updateFormData = (data: Partial<typeof formData>) => {
   Object.assign(formData, data);
@@ -107,6 +179,18 @@ const handleConsultar = () => {
 .request-view {
   min-height: 100vh;
   padding: 2rem;
+  position: relative;
+}
+
+.request-view :deep(.step-inicio) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
 }
 
 .btn {

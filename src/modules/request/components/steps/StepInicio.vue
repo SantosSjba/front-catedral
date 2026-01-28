@@ -1,24 +1,29 @@
 <template>
   <div class="step-inicio">
-    <div class="step-inicio__icon">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
+    <div class="step-inicio__background"></div>
     
-    <div class="step-inicio__buttons">
-      <button class="btn btn--primary btn--large" @click="$emit('nueva-solicitud')">
-        Nueva Solicitud
-      </button>
-      <button class="btn btn--primary btn--large" @click="$emit('consultar-solicitud')">
-        Consultar Solicitud
-      </button>
+    <div class="step-inicio__content">
+      <div class="step-inicio__card">
+        <div class="step-inicio__logo">
+          <LogoComponent />
+        </div>
+        
+        <div class="step-inicio__buttons">
+          <button class="btn btn--minimal" @click="$emit('nueva-solicitud')">
+            Nueva Solicitud
+          </button>
+          <button class="btn btn--minimal btn--outline" @click="$emit('consultar-solicitud')">
+            Consultar Solicitud
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import LogoComponent from "../LogoComponent.vue";
+
 defineEmits<{
   'nueva-solicitud': [];
   'consultar-solicitud': [];
@@ -27,16 +32,64 @@ defineEmits<{
 
 <style scoped>
 .step-inicio {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.step-inicio__background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/images/FondoCatedral.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(2px);
+  transform: scale(1.05);
+  z-index: 0;
+}
+
+.step-inicio__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+}
+
+.step-inicio__card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 8px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  gap: 2rem;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 420px;
 }
 
-.step-inicio__icon {
-  color: #2563eb;
+.step-inicio__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .step-inicio__buttons {
@@ -44,12 +97,64 @@ defineEmits<{
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  max-width: 300px;
 }
 
-.btn--large {
-  padding: 1rem 2rem;
-  font-size: 1rem;
+.btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.btn--minimal {
+  padding: 0.875rem 2rem;
+  font-size: 0.9rem;
   width: 100%;
+  background: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #1a1a1a;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn--minimal:hover {
+  background: #2d2d2d;
+  border-color: #2d2d2d;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn--outline {
+  background: transparent;
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.btn--outline:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 768px) {
+  .step-inicio__card {
+    padding: 3.5rem 3rem;
+    gap: 3rem;
+  }
+  
+  .step-inicio__buttons {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  .btn--minimal {
+    width: auto;
+    flex: 1;
+  }
 }
 </style>
