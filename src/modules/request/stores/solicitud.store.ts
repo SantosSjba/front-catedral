@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { ISolicitud, ITipoDocumento, ITipoMisa, IHorario } from '../interfaces/solicitud.interface';
-import { solicitudInicial } from '../interfaces/solicitud.interface';
+import type { ISolicitud, ITipoDocumento, ITipoMisa, IHorario, IMencion } from '../interfaces/solicitud.interface';
+import { solicitudInicial, COSTO_MENCION } from '../interfaces/solicitud.interface';
 
 export const useSolicitudStore = defineStore('solicitud', () => {
   // Estado de la solicitud
@@ -57,6 +57,9 @@ export const useSolicitudStore = defineStore('solicitud', () => {
     return tiposMisa.value.find(t => t.id === solicitud.value.idTipoMisa);
   });
 
+  // Verificar si es misa privada (ID 1)
+  const esMisaPrivada = computed(() => solicitud.value.idTipoMisa === 1);
+
   // Actions
   const updateDatosSolicitante = (datos: Partial<ISolicitud>) => {
     solicitud.value = { ...solicitud.value, ...datos };
@@ -77,12 +80,37 @@ export const useSolicitudStore = defineStore('solicitud', () => {
     solicitud.value = { ...solicitud.value, ...datos };
   };
 
+  // Menciones
+  const agregarMencion = (descripcion: string) => {
+    const nuevaMencion: IMencion = {
+      id: Date.now(), // ID único basado en timestamp
+      descripcion,
+      costo: COSTO_MENCION,
+    };
+    solicitud.value.menciones.push(nuevaMencion);
+  };
+
+  const eliminarMencion = (id: number) => {
+    solicitud.value.menciones = solicitud.value.menciones.filter(m => m.id !== id);
+  };
+
+  const actualizarMencion = (id: number, descripcion: string) => {
+    const mencion = solicitud.value.menciones.find(m => m.id === id);
+    if (mencion) {
+      mencion.descripcion = descripcion;
+    }
+  };
+
+  const totalMenciones = computed(() => {
+    return solicitud.value.menciones.reduce((sum, m) => sum + m.costo, 0);
+  });
+
   const setCurrentStep = (step: number) => {
     currentStep.value = step;
   };
 
   const resetSolicitud = () => {
-    solicitud.value = { ...solicitudInicial };
+    solicitud.value = { ...solicitudInicial, menciones: [] };
     currentStep.value = 0;
   };
 
@@ -101,10 +129,15 @@ export const useSolicitudStore = defineStore('solicitud', () => {
     datosSolicitanteCompletos,
     datosCelebracionCompletos,
     tipoMisaSeleccionado,
+    esMisaPrivada,
+    totalMenciones,
     // Actions
     updateDatosSolicitante,
     updateDatosCelebracion,
     updatePago,
+    agregarMencion,
+    eliminarMencion,
+    actualizarMencion,
     setCurrentStep,
     resetSolicitud,
     getSolicitudJSON,

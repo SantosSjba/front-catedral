@@ -27,6 +27,19 @@
         <template v-if="idTipoMisa">
           <!-- MISA PRIVADA -->
           <template v-if="esMisaPrivada">
+            <!-- Costo de Misa Privada -->
+            <div class="bg-[#FFF5E6] rounded-lg p-4 border border-[#D39E3A]/30">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-[#C88A2A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span class="text-[#4A4A4A] font-medium">Costo de Misa Privada</span>
+                </div>
+                <span class="text-[#C88A2A] font-bold text-xl">S/ {{ PRECIO_MISA_PRIVADA.toFixed(2) }}</span>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputDate
                 v-model="fechaCelebracion"
@@ -49,6 +62,20 @@
                 @blur="touchField('idHorario')"
               />
             </div>
+
+            <!-- Intención (solo para misa privada) -->
+            <InputTextarea
+              v-model="intencion"
+              name="intencion"
+              label="Intención"
+              placeholder="Escriba la intención de la misa (ej: Acción de gracias, por la salud de...)"
+              :rows="3"
+              :maxlength="500"
+              :show-count="true"
+              :required="true"
+              :error-message="fieldErrors.intencion"
+              @blur="touchField('intencion')"
+            />
           </template>
 
           <!-- MISA COMUNITARIA -->
@@ -124,20 +151,6 @@
               </p>
             </div>
           </template>
-
-          <!-- Intención (común para ambos tipos) -->
-          <InputTextarea
-            v-model="intencion"
-            name="intencion"
-            label="Intención"
-            placeholder="Escriba la intención de la misa (ej: Acción de gracias, por la salud de...)"
-            :rows="3"
-            :maxlength="500"
-            :show-count="true"
-            :required="true"
-            :error-message="fieldErrors.intencion"
-            @blur="touchField('intencion')"
-          />
         </template>
 
         <!-- Validation Message -->
@@ -158,26 +171,33 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed, reactive } from 'vue';
 import { useSolicitudStore } from '../../stores/solicitud.store';
-import { getOpcionesLista } from '../../actions/getOpcionesLista.action';
 import { getMisas } from '../../actions/getMisas.action';
-import { mapOpcionToSelect, type ISelectOption } from '../../interfaces/opcionLista.interface';
+import { type ISelectOption } from '../../interfaces/opcionLista.interface';
 import { mapMisaToListItem, type IMisaListItem } from '../../interfaces/misa.interface';
 import { InputSelect, InputDate, InputTextarea } from '@/components/inputs';
 
+// Para carga dinámica futura, descomentar:
+// import { getOpcionesLista } from '../../actions/getOpcionesLista.action';
+// import { mapOpcionToSelect } from '../../interfaces/opcionLista.interface';
+
 const store = useSolicitudStore();
 
-// IDs de listas (ajustar según la API)
-const ID_LISTA_TIPO_MISA = 2;
-const ID_LISTA_HORARIOS = 3;
+// IDs y constantes
+// Para carga dinámica: const ID_LISTA_TIPO_MISA = 2; const ID_LISTA_HORARIOS = 3;
 const ID_TIPO_MISA_PRIVADA = 1;
+const ID_TIPO_MISA_COMUNITARIA = 2;
+const PRECIO_MISA_PRIVADA = 50.00; // Precio estático para misa privada
 
 // Estados de carga
-const loadingTiposMisa = ref(true);
+const loadingTiposMisa = ref(false);
 const loadingHorarios = ref(true);
 const loadingMisas = ref(false);
 
-// Opciones
-const tiposMisa = ref<ISelectOption[]>([]);
+// Opciones - Estáticas por ahora
+const tiposMisa = ref<ISelectOption[]>([
+  { id: ID_TIPO_MISA_PRIVADA, nombre: 'Misa Privada' },
+  { id: ID_TIPO_MISA_COMUNITARIA, nombre: 'Misa Comunitaria' },
+]);
 const horarios = ref<ISelectOption[]>([]);
 const misasDisponibles = ref<IMisaListItem[]>([]);
 
@@ -203,8 +223,11 @@ const esMisaPrivada = computed(() => idTipoMisa.value === ID_TIPO_MISA_PRIVADA);
 // Verificar si hay errores
 const hasErrors = computed(() => Object.values(fieldErrors).some(e => e));
 
-// Cargar tipos de misa
+// Cargar tipos de misa (manteniendo la lógica dinámica para futuro)
 const cargarTiposMisa = async () => {
+  // Por ahora usamos datos estáticos, pero mantenemos la estructura para futuro
+  // Para habilitar carga dinámica, descomentar y agregar: const ID_LISTA_TIPO_MISA = 2;
+  /*
   try {
     loadingTiposMisa.value = true;
     const opciones = await getOpcionesLista(ID_LISTA_TIPO_MISA);
@@ -218,26 +241,20 @@ const cargarTiposMisa = async () => {
   } finally {
     loadingTiposMisa.value = false;
   }
+  */
 };
 
-// Cargar horarios
-const cargarHorarios = async () => {
-  try {
-    loadingHorarios.value = true;
-    const opciones = await getOpcionesLista(ID_LISTA_HORARIOS);
-    horarios.value = opciones.map(mapOpcionToSelect);
-  } catch (error) {
-    console.error('Error al cargar horarios:', error);
-    horarios.value = [
-      { id: 1, nombre: '07:00 AM' },
-      { id: 2, nombre: '09:00 AM' },
-      { id: 3, nombre: '11:00 AM' },
-      { id: 4, nombre: '05:00 PM' },
-      { id: 5, nombre: '07:00 PM' },
-    ];
-  } finally {
-    loadingHorarios.value = false;
-  }
+// Cargar horarios (estático por ahora)
+const cargarHorarios = () => {
+  // Para carga dinámica futura, usar getOpcionesLista(ID_LISTA_HORARIOS)
+  horarios.value = [
+    { id: 1, nombre: '07:00 AM' },
+    { id: 2, nombre: '09:00 AM' },
+    { id: 3, nombre: '11:00 AM' },
+    { id: 4, nombre: '05:00 PM' },
+    { id: 5, nombre: '07:00 PM' },
+  ];
+  loadingHorarios.value = false;
 };
 
 // Cargar misas comunitarias
@@ -279,17 +296,20 @@ const validateField = (fieldName: string) => {
       }
       break;
     case 'idMisaSeleccionada':
-      if (!esMisaPrivada.value) {
+      if (!esMisaPrivada.value && idTipoMisa.value) {
         fieldErrors.idMisaSeleccionada = !idMisaSeleccionada.value ? 'Seleccione una misa' : undefined;
       }
       break;
     case 'intencion':
-      if (!intencion.value) {
-        fieldErrors.intencion = 'La intención es requerida';
-      } else if (intencion.value.length < 10) {
-        fieldErrors.intencion = 'Mínimo 10 caracteres';
-      } else {
-        fieldErrors.intencion = undefined;
+      // Solo validar intención para misa privada
+      if (esMisaPrivada.value) {
+        if (!intencion.value) {
+          fieldErrors.intencion = 'La intención es requerida';
+        } else if (intencion.value.length < 10) {
+          fieldErrors.intencion = 'Mínimo 10 caracteres';
+        } else {
+          fieldErrors.intencion = undefined;
+        }
       }
       break;
   }
@@ -309,25 +329,27 @@ const validateAll = (): boolean => {
 
   // Validar según tipo de misa
   if (esMisaPrivada.value) {
+    // Misa privada: fecha, horario e intención requeridos
     if (!fechaCelebracion.value) {
       fieldErrors.fechaCelebracion = 'La fecha es requerida';
     }
     if (!idHorario.value) {
       fieldErrors.idHorario = 'Seleccione un horario';
     }
-  } else {
-    if (!idMisaSeleccionada.value) {
-      fieldErrors.idMisaSeleccionada = 'Seleccione una misa';
-    }
-  }
-
-  // Validar intención (siempre requerida si hay tipo de misa seleccionado)
-  if (idTipoMisa.value) {
     if (!intencion.value) {
       fieldErrors.intencion = 'La intención es requerida';
     } else if (intencion.value.length < 10) {
       fieldErrors.intencion = 'Mínimo 10 caracteres';
     }
+    
+    // Asignar precio de misa privada
+    store.solicitud.montoTotal = PRECIO_MISA_PRIVADA;
+  } else if (idTipoMisa.value) {
+    // Misa comunitaria: solo requiere seleccionar una misa
+    if (!idMisaSeleccionada.value) {
+      fieldErrors.idMisaSeleccionada = 'Seleccione una misa';
+    }
+    // La intención NO es requerida para misa comunitaria
   }
 
   return !hasErrors.value;
@@ -364,6 +386,7 @@ watch(idTipoMisa, async (newValue, oldValue) => {
     idHorario.value = null;
     idMisaSeleccionada.value = null;
     horarioMisaSeleccionada.value = '';
+    intencion.value = '';
     
     // Limpiar errores
     fieldErrors.fechaCelebracion = undefined;
@@ -380,13 +403,13 @@ watch(idTipoMisa, async (newValue, oldValue) => {
 
 // Watch para guardar en store
 watch(
-  [idTipoMisa, fechaCelebracion, idHorario, intencion],
+  [idTipoMisa, fechaCelebracion, idHorario, intencion, idMisaSeleccionada],
   () => {
     store.updateDatosCelebracion({
       idTipoMisa: idTipoMisa.value,
       fechaCelebracion: fechaCelebracion.value,
       idHorario: idHorario.value,
-      intencion: intencion.value,
+      intencion: esMisaPrivada.value ? intencion.value : '', // Solo guardar intención si es privada
     });
   },
   { deep: true }
@@ -408,13 +431,14 @@ onMounted(async () => {
   }
 });
 
-// Exponer método de validación para el wizard
+// Exponer método de validación y estado para el wizard
 defineExpose({
   validate: async () => {
     hasInteracted.value = true;
     const isValid = validateAll();
     return isValid;
   },
+  esMisaPrivada, // Exponer para que RequestView pueda decidir el flujo
 });
 </script>
 

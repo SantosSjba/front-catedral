@@ -17,7 +17,9 @@
       <main class="flex-1 flex flex-col px-4 py-6">
         <div class="w-full max-w-4xl mx-auto">
           <FormWizard
+            ref="wizardRef"
             @complete="onComplete"
+            @on-change="onStepChange"
             color="#C88A2A"
             title=""
             subtitle=""
@@ -71,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { FormWizard, TabContent } from 'vue3-form-wizard';
 import 'vue3-form-wizard/dist/style.css';
 
@@ -85,6 +87,10 @@ import StepResumen from '../components/steps/StepResumen.vue';
 import { useSolicitudStore } from '../stores/solicitud.store';
 
 const store = useSolicitudStore();
+
+// Referencia al FormWizard
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const wizardRef = ref<any>(null);
 
 // Referencias a los componentes de pasos
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,7 +112,26 @@ const validateStep1 = async (): Promise<boolean> => {
 
 const validateStep2 = async (): Promise<boolean> => {
   if (step2Ref.value?.validate) {
-    return await step2Ref.value.validate();
+    const isValid = await step2Ref.value.validate();
+    
+    if (isValid) {
+      // Verificar si es misa privada o comunitaria
+      const esMisaPrivada = step2Ref.value?.esMisaPrivada;
+      
+      if (esMisaPrivada) {
+        // Misa privada -> Saltar directamente a Pago (índice 3)
+        await nextTick();
+        setTimeout(() => {
+          if (wizardRef.value) {
+            wizardRef.value.changeTab(1, 3); // De Celebración (1) a Pago (3)
+          }
+        }, 50);
+        return false; // Retornar false para que no avance automáticamente
+      }
+      // Misa comunitaria -> Continuar a Menciones normalmente
+      return true;
+    }
+    return false;
   }
   return true;
 };
@@ -123,6 +148,21 @@ const validateStep4 = async (): Promise<boolean> => {
     return await step4Ref.value.validate();
   }
   return true;
+};
+
+// Manejar cambios de paso (para navegación hacia atrás)
+const onStepChange = (prevIndex: number, nextIndex: number) => {
+  // Si estamos yendo hacia atrás desde Pago (3) a Menciones (2) y es misa privada
+  // Redirigir a Celebración (1)
+  if (prevIndex === 3 && nextIndex === 2 && store.esMisaPrivada) {
+    nextTick(() => {
+      setTimeout(() => {
+        if (wizardRef.value) {
+          wizardRef.value.changeTab(2, 1); // De Menciones (2) a Celebración (1)
+        }
+      }, 50);
+    });
+  }
 };
 
 const onComplete = () => {

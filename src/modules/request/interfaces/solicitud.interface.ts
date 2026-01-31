@@ -13,7 +13,8 @@ export interface ISolicitud {
   idHorario: number | null;
   intencion: string;
 
-  // Menciones (Paso 3) - se manejará por separado
+  // Menciones (Paso 3)
+  menciones: IMencion[];
 
   // Pago (Paso 4)
   voucherPago: string;
@@ -24,6 +25,13 @@ export interface ISolicitud {
   fechaMisaDeseada: string;
   estado: boolean;
   idUsuarioCreacion: number | null;
+}
+
+// Interface para menciones
+export interface IMencion {
+  id: number;
+  descripcion: string;
+  costo: number;
 }
 
 export interface ITipoDocumento {
@@ -43,6 +51,9 @@ export interface IHorario {
   descripcion: string;
 }
 
+// Costo por mención (estático por ahora)
+export const COSTO_MENCION = 5;
+
 // Estado inicial de la solicitud
 export const solicitudInicial: ISolicitud = {
   idTipoDocumento: null,
@@ -55,6 +66,7 @@ export const solicitudInicial: ISolicitud = {
   idTipoMisa: null,
   idHorario: null,
   intencion: '',
+  menciones: [],
   voucherPago: '',
   montoTotal: 0,
   fechaSolicitud: new Date().toISOString().split('T')[0] || '',
