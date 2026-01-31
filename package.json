@@ -13,7 +13,8 @@
     "axios": "^1.13.4",
     "tailwindcss": "^4.1.18",
     "vue": "^3.5.24",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "vue3-form-wizard": "^0.3.5"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
