@@ -5,6 +5,8 @@ import type { IMisa } from "../interfaces/misa.interface";
 export interface GetMisasOptions {
   /** Solo misas con `fechacelebracion` >= esta fecha (YYYY-MM-DD), p. ej. hoy. */
   fechacelebracionDesde?: string;
+  /** Por defecto true: excluye misas inactivas en el flujo público. */
+  soloActivas?: boolean;
 }
 
 /**
@@ -26,6 +28,9 @@ export const getMisas = async (
     }
     if (options?.fechacelebracionDesde) {
       url += `&fechacelebracion=gte.${options.fechacelebracionDesde}`;
+    }
+    if (options?.soloActivas !== false) {
+      url += "&estado=eq.true";
     }
 
     const { data } = await apiClient.get<IMisa[]>(url);

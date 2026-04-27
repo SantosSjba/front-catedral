@@ -8,7 +8,7 @@ export const getMisasCalendario = async (
 ): Promise<IMisaCalendario[]> => {
   try {
     const select = "*,tipomisa(nombre,precio),mencionesmisa(count)";
-    const url = `/misas?select=${select}&fechacelebracion=gte.${startDate}&fechacelebracion=lte.${endDate}&order=fechacelebracion.asc&order=horainicio.asc`;
+    const url = `/misas?select=${select}&estado=eq.true&fechacelebracion=gte.${startDate}&fechacelebracion=lte.${endDate}&order=fechacelebracion.asc&order=horainicio.asc`;
     const { data } = await apiClient.get<IMisaCalendario[]>(url);
     return Array.isArray(data) ? data : [];
   } catch (error) {
