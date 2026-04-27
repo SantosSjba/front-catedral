@@ -2,11 +2,11 @@
   <AdminLayout>
     <div class="min-h-screen flex flex-col relative">
       <div class="relative z-10 flex flex-col min-h-screen">
-        <main class="flex-1 px-4 py-6">
+        <main class="flex-1 px-0 py-0 sm:px-4 sm:py-6">
           <div class="w-full max-w-7xl mx-auto">
 
             <!-- Header -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 transition-colors">
+            <div class="bg-white dark:bg-gray-800 rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 transition-colors">
               <div
                 class="flex flex-col gap-5">
                 <div class="min-w-0 flex-1">

@@ -55,7 +55,7 @@
     </div>
 
     <div class="px-3 sm:px-6 py-4 sm:py-6">
-      <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
+      <div class="hidden sm:grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
         <div
           v-for="d in weekDays"
           :key="d"
@@ -72,7 +72,49 @@
         </div>
       </div>
 
-      <div v-else class="grid grid-cols-7 gap-1 sm:gap-2">
+      <div v-else>
+        <div class="space-y-3 sm:hidden">
+          <div
+            v-for="day in daysInMonth"
+            :key="`m-${day.dateKey}`"
+            class="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900/40 p-3"
+            :class="day.isToday ? 'ring-1 ring-[#C88A2A]/40 border-[#C88A2A]/50 bg-amber-50/40 dark:bg-amber-900/10' : ''"
+          >
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                {{ formatFechaEncabezadoMobile(day.dateKey) }}
+              </p>
+              <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                {{ day.misas.length }} misa(s)
+              </span>
+            </div>
+            <div v-if="day.misas.length > 0" class="space-y-2">
+              <button
+                v-for="misa in day.misas"
+                :key="`m-row-${misa.id}`"
+                type="button"
+                class="w-full rounded-lg border px-3 py-2 text-left transition-colors"
+                :class="
+                  misa.soloInformativaCalendario
+                    ? 'bg-gray-50 dark:bg-gray-800/70 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'
+                    : 'bg-amber-50/80 dark:bg-amber-900/20 border-[#C88A2A]/30 text-gray-800 dark:text-gray-100'
+                "
+                @click="emitSelect(misa)"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-semibold">{{ misa.horario }}</span>
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-white/70 dark:bg-gray-800/80">{{ misa.menciones }}</span>
+                </div>
+                <p class="mt-1 text-xs leading-relaxed">{{ misa.titulo }}</p>
+              </button>
+            </div>
+            <p v-else class="text-xs text-gray-500 dark:text-gray-400">
+              Sin misas programadas.
+            </p>
+          </div>
+        </div>
+
+        <div class="hidden sm:grid grid-cols-7 gap-1 sm:gap-2">
         <div
           v-for="i in leadingBlankDays"
           :key="'blank-' + i"
@@ -143,6 +185,7 @@
               </div>
             </button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -385,6 +428,15 @@ const daysInMonth = computed(() => {
   }
   return days;
 });
+
+function formatFechaEncabezadoMobile(dateKey: string): string {
+  const date = new Date(`${dateKey}T00:00:00`);
+  return date.toLocaleDateString('es-PE', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+  });
+}
 
 function horaCorta(hora: string | undefined): string {
   if (!hora || !hora.includes(':')) return '--:--';

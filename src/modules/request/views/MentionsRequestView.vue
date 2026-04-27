@@ -80,7 +80,7 @@
             <!-- Calendar Grid -->
             <div class="px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
               <!-- Week Days Header -->
-              <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
+              <div class="hidden sm:grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
                 <div
                   v-for="d in weekDays"
                   :key="d"
@@ -99,7 +99,52 @@
               </div>
 
               <!-- Calendar Days -->
-              <div v-else class="grid grid-cols-7 gap-1 sm:gap-2">
+              <div v-else>
+                <div class="space-y-3 sm:hidden">
+                  <div
+                    v-for="day in daysInMonth"
+                    :key="`m-${day.dateKey}`"
+                    class="rounded-lg border border-[#E0D5C5]/70 bg-white p-3"
+                    :class="day.isToday ? 'ring-1 ring-[#8C1D40]/35 border-[#8C1D40]/35 bg-[#FFF5E6]/50' : ''"
+                  >
+                    <div class="mb-2 flex items-center justify-between gap-2">
+                      <p class="text-sm font-semibold text-[#4A4A4A]">
+                        {{ formatFechaEncabezadoMobile(day.dateKey) }}
+                      </p>
+                      <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                        {{ day.misas.length }} misa(s)
+                      </span>
+                    </div>
+                    <div v-if="day.misas.length > 0" class="space-y-2">
+                      <button
+                        v-for="misa in day.misas"
+                        :key="`m-row-${misa.id}`"
+                        type="button"
+                        class="w-full rounded-lg border px-3 py-2 text-left transition-colors"
+                        :class="
+                          misa.soloInformativaCalendario
+                            ? 'bg-gray-50/80 border-gray-200/70 text-gray-500'
+                            : !misa.puedeSolicitar
+                              ? 'bg-stone-100/90 border-stone-200/80 text-stone-500'
+                              : 'bg-[#FFF5E6]/85 border-[#D39E3A]/30 text-[#8C1D40]'
+                        "
+                        :disabled="misa.soloInformativaCalendario || !misa.puedeSolicitar"
+                        @click="onSelectMisa(misa)"
+                      >
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="text-xs font-semibold">{{ misa.horario }}</span>
+                          <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-white/70">{{ misa.menciones }}</span>
+                        </div>
+                        <p class="mt-1 text-xs leading-relaxed">{{ misa.titulo }}</p>
+                      </button>
+                    </div>
+                    <p v-else class="text-xs text-gray-500">
+                      Sin misas programadas.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="hidden sm:grid grid-cols-7 gap-1 sm:gap-2">
                 <!-- Leading blank days -->
                 <div
                   v-for="i in leadingBlankDays"
@@ -181,6 +226,7 @@
                       </div>
                     </button>
                   </div>
+                </div>
                 </div>
               </div>
 
@@ -314,6 +360,15 @@ const daysInMonth = computed(() => {
   }
   return days;
 });
+
+const formatFechaEncabezadoMobile = (dateKey: string): string => {
+  const date = new Date(`${dateKey}T00:00:00`);
+  return date.toLocaleDateString("es-PE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
+};
 
 const mapMisa = (misa: IMisaCalendario): IMisaCalendarItem => {
   const esComunitaria = esTipoMisaComunitariaCalendarioPublico(
