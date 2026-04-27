@@ -89,7 +89,7 @@
               leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 translate-y-0"
               leave-to-class="opacity-0 -translate-y-1">
               <div v-show="filtrosPanelAbiertos"
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 transition-colors overflow-hidden">
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 transition-colors overflow-visible">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Filtros</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
 
@@ -158,15 +158,51 @@
                   importe solo si la solicitud está aprobada). Usa el listado filtrado actual.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
-                  <div class="flex-1 min-w-0">
+                  <div ref="contenedorBuscadorMisa" class="flex-1 min-w-0 relative">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Misa</label>
-                    <select v-model="idMisaExportMenciones"
-                      class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#C88A2A] focus:border-transparent transition-all">
-                      <option value="">Seleccione una misa…</option>
-                      <option v-for="m in misasFiltradas" :key="m.idmisa" :value="String(m.idmisa)">
-                        #{{ m.idmisa }} — {{ m.fechacelebracion }} · {{ etiquetaOpcionMisa(m) }}
-                      </option>
-                    </select>
+                    <div class="relative">
+                      <input
+                        v-model="busquedaMisaExport"
+                        type="text"
+                        placeholder="Buscar por código, fecha o título…"
+                        class="w-full px-4 py-2.5 pr-9 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-[#C88A2A] focus:border-transparent transition-all"
+                        @focus="mostrarOpcionesMisa = true"
+                      />
+                      <button
+                        v-if="idMisaExportMenciones"
+                        type="button"
+                        class="absolute inset-y-0 right-7 my-auto h-6 px-1 text-xs text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                        title="Limpiar selección"
+                        @click="limpiarSeleccionMisaExport"
+                      >
+                        Limpiar
+                      </button>
+                      <Icon
+                        icon="mdi:chevron-down"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <div
+                      v-if="mostrarOpcionesMisa"
+                      class="absolute z-[120] mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-lg max-h-64 overflow-auto"
+                    >
+                      <button
+                        v-for="m in opcionesMisaExportFiltradas"
+                        :key="m.id"
+                        type="button"
+                        class="w-full px-3 py-2 text-left text-sm text-gray-800 dark:text-gray-100 hover:bg-amber-50 dark:hover:bg-amber-900/20 border-b border-gray-100 dark:border-gray-800 last:border-b-0"
+                        @click="seleccionarMisaExport(m.id)"
+                      >
+                        {{ m.label }}
+                      </button>
+                      <p
+                        v-if="opcionesMisaExportFiltradas.length === 0"
+                        class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400"
+                      >
+                        No se encontraron misas con ese criterio.
+                      </p>
+                    </div>
                   </div>
                   <button type="button" @click="exportarExcelMencionesSeleccion"
                     :disabled="idMisaExportMenciones === '' || misasFiltradas.length === 0 || exportandoExcelMencionesMisa !== null"
@@ -416,7 +452,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import {
   Document, Packer, Paragraph, Table, TableRow, TableCell,
@@ -467,6 +503,9 @@ const exportandoExcel = ref(false);
 /** null = inactivo; número = fila en carga; 'select' = export desde desplegable */
 const exportandoExcelMencionesMisa = ref<number | 'select' | null>(null);
 const idMisaExportMenciones = ref<string>('');
+const contenedorBuscadorMisa = ref<HTMLElement | null>(null);
+const busquedaMisaExport = ref('');
+const mostrarOpcionesMisa = ref(false);
 
 const modalDetalle = ref({ isOpen: false, misaId: null as number | null });
 const modalForm = ref({ isOpen: false, misaId: null as number | null });
@@ -627,6 +666,32 @@ const etiquetaOpcionMisa = (m: IMisaConRelaciones): string => {
   return t.length > 56 ? `${t.slice(0, 53)}…` : t;
 };
 
+const opcionesMisaExport = computed(() =>
+  misasFiltradas.value.map((m) => ({
+    id: m.idmisa,
+    label: `#${m.idmisa} — ${m.fechacelebracion} · ${etiquetaOpcionMisa(m)}`,
+  })),
+);
+
+const opcionesMisaExportFiltradas = computed(() => {
+  const q = busquedaMisaExport.value.trim().toLowerCase();
+  if (!q) return opcionesMisaExport.value;
+  return opcionesMisaExport.value.filter((o) => o.label.toLowerCase().includes(q));
+});
+
+const seleccionarMisaExport = (id: number) => {
+  idMisaExportMenciones.value = String(id);
+  const opt = opcionesMisaExport.value.find((o) => o.id === id);
+  busquedaMisaExport.value = opt?.label ?? '';
+  mostrarOpcionesMisa.value = false;
+};
+
+const limpiarSeleccionMisaExport = () => {
+  idMisaExportMenciones.value = '';
+  busquedaMisaExport.value = '';
+  mostrarOpcionesMisa.value = false;
+};
+
 const exportarExcelMencionesDeMisa = async (idmisa: number, origen: 'fila' | 'select') => {
   if (exportandoExcelMencionesMisa.value !== null) return;
   exportandoExcelMencionesMisa.value = origen === 'select' ? 'select' : idmisa;
@@ -662,6 +727,27 @@ watch(
   },
   { deep: true }
 );
+
+watch(
+  [idMisaExportMenciones, opcionesMisaExport],
+  () => {
+    if (!idMisaExportMenciones.value) {
+      if (!mostrarOpcionesMisa.value) busquedaMisaExport.value = '';
+      return;
+    }
+    const id = Number(idMisaExportMenciones.value);
+    const opt = opcionesMisaExport.value.find((o) => o.id === id);
+    if (opt) busquedaMisaExport.value = opt.label;
+  },
+  { immediate: true },
+);
+
+const onClickFueraBuscadorMisa = (event: PointerEvent) => {
+  const target = event.target as Node | null;
+  if (contenedorBuscadorMisa.value && target && !contenedorBuscadorMisa.value.contains(target)) {
+    mostrarOpcionesMisa.value = false;
+  }
+};
 
 /* ================================
    EXPORT WORD
@@ -924,6 +1010,11 @@ const cargarTiposMisa = async () => {
 };
 
 onMounted(async () => {
+  document.addEventListener('pointerdown', onClickFueraBuscadorMisa, true);
   await Promise.all([cargarTiposMisa(), cargarMisas()]);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onClickFueraBuscadorMisa, true);
 });
 </script>
