@@ -161,10 +161,11 @@
           @dragover.prevent="isDragging = true"
           @dragleave="isDragging = false"
         >
-          <input 
+          <input
             ref="fileInput"
-            type="file" 
+            type="file"
             accept=".jpg,.jpeg,.png,.pdf"
+            :multiple="false"
             class="hidden"
             @change="handleFileSelect"
           />
@@ -186,7 +187,9 @@
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {{ archivoSeleccionado ? 'Click para cambiar' : 'Click o arrastra archivo' }}
           </p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">JPG, PNG, PDF (Máx. 5MB)</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            Un solo comprobante por solicitud. JPG, PNG, PDF (máx. 5&nbsp;MB).
+          </p>
           
           <!-- Error Message -->
           <p v-if="fieldErrors.voucher" class="text-sm text-red-500 dark:text-red-400 mt-2">
@@ -348,7 +351,8 @@ const handleFileSelect = (event: Event) => {
 
 const handleDrop = (event: DragEvent) => {
   isDragging.value = false;
-  const file = event.dataTransfer?.files?.[0];
+  const list = event.dataTransfer?.files;
+  const file = list?.[0];
   if (file) {
     processFile(file);
   }
