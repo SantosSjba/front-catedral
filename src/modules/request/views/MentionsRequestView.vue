@@ -35,28 +35,43 @@
                 </div>
 
                 <!-- Navigation Controls -->
-                <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
-                  <button
-                    class="flex items-center justify-center min-h-[44px] px-4 sm:px-5 rounded-lg border border-[#E0D5C5] text-sm font-medium text-[#4A4A4A] hover:bg-[#F5F0E8] hover:border-[#8C1D40]/20 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-                    @click="goPrevMonth"
-                    :disabled="!canGoPrev"
-                  >
-                    <Icon icon="mdi:chevron-left" class="w-4 h-4 sm:mr-1.5 shrink-0" aria-hidden="true" />
-                    <span class="hidden sm:inline">Anterior</span>
-                  </button>
-
+                <div class="w-full sm:w-auto flex flex-col gap-2 sm:gap-3">
                   <div
-                    class="px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg bg-gradient-to-br from-[#8C1D40] to-[#6D1632] text-white font-semibold text-sm sm:text-base shadow-md min-w-[140px] sm:min-w-[180px] text-center"
+                    class="grid w-full grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 sm:flex sm:w-auto sm:items-center sm:justify-end sm:gap-3"
                   >
-                    {{ monthLabel }}
+                    <button
+                      class="h-11 w-11 inline-flex items-center justify-center rounded-lg border border-[#E0D5C5] text-[#4A4A4A] hover:bg-[#F5F0E8] hover:border-[#8C1D40]/20 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                      @click="goPrevMonth"
+                      :disabled="!canGoPrev"
+                      aria-label="Mes anterior"
+                      title="Mes anterior"
+                    >
+                      <Icon icon="mdi:chevron-left" class="w-5 h-5 shrink-0" aria-hidden="true" />
+                    </button>
+
+                    <input
+                      type="month"
+                      :value="monthInputValue"
+                      :min="minMonthInputValue"
+                      class="h-11 w-full min-w-0 px-3 rounded-lg border border-[#E0D5C5] text-sm font-medium text-[#4A4A4A] bg-white"
+                      @change="seleccionarMes"
+                    />
+
+                    <button
+                      class="h-11 w-11 inline-flex items-center justify-center rounded-lg border border-[#E0D5C5] text-[#4A4A4A] hover:bg-[#F5F0E8] hover:border-[#8C1D40]/20 transition-all duration-200 active:scale-95"
+                      @click="goNextMonth"
+                      aria-label="Mes siguiente"
+                      title="Mes siguiente"
+                    >
+                      <Icon icon="mdi:chevron-right" class="w-5 h-5 shrink-0" aria-hidden="true" />
+                    </button>
                   </div>
 
                   <button
-                    class="flex items-center justify-center min-h-[44px] px-4 sm:px-5 rounded-lg border border-[#E0D5C5] text-sm font-medium text-[#4A4A4A] hover:bg-[#F5F0E8] hover:border-[#8C1D40]/20 transition-all duration-200 active:scale-95"
-                    @click="goNextMonth"
+                    class="h-11 w-full sm:w-auto px-4 sm:px-5 rounded-lg border border-[#E0D5C5] text-sm font-medium text-[#4A4A4A] hover:bg-[#F5F0E8] hover:border-[#8C1D40]/20 transition-all duration-200 active:scale-95"
+                    @click="irMesActual"
                   >
-                    <span class="hidden sm:inline">Siguiente</span>
-                    <Icon icon="mdi:chevron-right" class="w-4 h-4 sm:ml-1.5 shrink-0" aria-hidden="true" />
+                    Mes actual
                   </button>
                 </div>
               </div>
@@ -257,12 +272,17 @@ const currentMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1));
 
 const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-const monthLabel = computed(() =>
-  currentMonth.value.toLocaleDateString("es-PE", {
-    month: "long",
-    year: "numeric",
-  }).replace(/^\w/, c => c.toUpperCase())
-);
+const monthInputValue = computed(() => {
+  const y = currentMonth.value.getFullYear();
+  const m = String(currentMonth.value.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+});
+
+const minMonthInputValue = computed(() => {
+  const y = minMonth.getFullYear();
+  const m = String(minMonth.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+});
 
 const canGoPrev = computed(() => currentMonth.value > minMonth);
 
@@ -381,6 +401,21 @@ const goPrevMonth = () => {
     1
   );
   currentMonth.value = prev;
+};
+
+const seleccionarMes = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value;
+  if (!value) return;
+  const [y, m] = value.split("-");
+  const year = Number(y);
+  const month = Number(m);
+  if (!Number.isFinite(year) || !Number.isFinite(month)) return;
+  const candidate = new Date(year, month - 1, 1);
+  currentMonth.value = candidate < minMonth ? new Date(minMonth) : candidate;
+};
+
+const irMesActual = () => {
+  currentMonth.value = new Date(minMonth);
 };
 
 watch(currentMonth, () => {

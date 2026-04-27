@@ -8,14 +8,14 @@
             <!-- Header -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 transition-colors">
               <div
-                class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+                class="flex flex-col gap-5">
                 <div class="min-w-0 flex-1">
                   <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Gestión de Misas</h1>
                   <p class="text-gray-600 dark:text-gray-400">Administra el calendario de misas y celebraciones</p>
                 </div>
                 <!-- Barra de acciones: dos grupos (vista/filtros | exportar/crear) para evitar filas huérfanas -->
                 <div
-                  class="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end lg:w-auto lg:max-w-[min(100%,44rem)] xl:max-w-none xl:flex-nowrap xl:gap-3">
+                  class="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start xl:justify-start 2xl:flex-nowrap xl:gap-3">
                   <div
                     class="flex flex-wrap items-center justify-stretch gap-2 sm:justify-end rounded-xl border border-gray-200/80 bg-gray-50/80 p-1.5 dark:border-gray-600 dark:bg-gray-900/40 sm:inline-flex sm:shrink-0">
                     <div

@@ -13,7 +13,7 @@ const apiClient = axios.create({
 /**
  * Evita respuestas stale en lecturas GET del panel/cliente.
  * - Añade headers no-cache.
- * - Añade query param `_ts` para cache-busting en navegador/proxies.
+ * - Evita usar query params arbitrarios (PostgREST los interpreta como filtros).
  */
 apiClient.interceptors.request.use((config) => {
   const method = config.method?.toLowerCase();
@@ -22,11 +22,8 @@ apiClient.interceptors.request.use((config) => {
     headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
     headers.set("Pragma", "no-cache");
     headers.set("Expires", "0");
+    headers.set("X-Client-Request-At", String(Date.now()));
     config.headers = headers;
-    config.params = {
-      ...(config.params ?? {}),
-      _ts: Date.now(),
-    };
   }
   return config;
 });
