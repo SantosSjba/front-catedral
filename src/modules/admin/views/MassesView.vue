@@ -41,7 +41,7 @@
                         <span class="hidden sm:inline">Calendario</span>
                       </button>
                     </div>
-                    <button type="button" @click="toggleFiltrosPanel"
+                    <button v-if="!vistaCalendario" type="button" @click="toggleFiltrosPanel"
                       class="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 sm:flex-initial sm:min-w-0"
                       :aria-expanded="filtrosPanelAbiertos"
                       :title="filtrosPanelAbiertos ? 'Ocultar panel de filtros' : 'Mostrar panel de filtros'">
@@ -84,7 +84,7 @@
             </div>
 
             <!-- Filters (panel colapsable) -->
-            <Transition enter-active-class="transition duration-200 ease-out"
+            <Transition v-if="!vistaCalendario" enter-active-class="transition duration-200 ease-out"
               enter-from-class="opacity-0 -translate-y-1" enter-to-class="opacity-100 translate-y-0"
               leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 translate-y-0"
               leave-to-class="opacity-0 -translate-y-1">
